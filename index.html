@@ -3,42 +3,217 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tamyris Tetris | MGD</title>
+    <title>Tamyris Tetris | CaĞnım Kızıma :)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <style>
-        body { background-color: #0f172a; color: white; margin: 0; overflow: hidden; }
-        .grid-cell { width: 30px; height: 30px; border: 1px solid #1e293b; }
+        body { background-color: #020617; color: white; overflow: hidden; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        
+        /* Gerçek Tuğla Görsel Dokusu */
+        .brick {
+            width: 30px;
+            height: 30px;
+            border: 3px solid rgba(0,0,0,0.15);
+            border-top-color: rgba(255,255,255,0.3);
+            border-left-color: rgba(255,255,255,0.3);
+            box-shadow: inset 2px 2px 5px rgba(0,0,0,0.3);
+            border-radius: 4px;
+        }
+
+        /* Mesaj Patlama Animasyonu */
+        @keyframes praise-pop {
+            0% { transform: scale(0.5) translateY(20px); opacity: 0; }
+            50% { transform: scale(1.2) translateY(-10px); opacity: 1; }
+            100% { transform: scale(1) translateY(-30px); opacity: 0; }
+        }
+        .praise-anim {
+            animation: praise-pop 2.5s ease-out forwards;
+            position: absolute;
+            pointer-events: none;
+            text-shadow: 0 0 15px rgba(255, 255, 255, 0.8);
+            z-index: 100;
+        }
+
+        .grid-container {
+            background: linear-gradient(145deg, #1e293b, #0f172a);
+            border: 8px solid #334155;
+            box-shadow: 0 0 30px rgba(56, 189, 248, 0.2);
+        }
     </style>
 </head>
 <body>
     <div id="root"></div>
 
     <script type="text/babel">
-        const { useState, useEffect } = React;
+        const { useState, useEffect, useRef, useCallback } = React;
 
-        function Tetris() {
+        const COLORS = {
+            I: 'bg-cyan-400', J: 'bg-blue-600', L: 'bg-orange-500',
+            O: 'bg-yellow-400', S: 'bg-green-500', T: 'bg-purple-600', Z: 'bg-red-500'
+        };
+
+        const PRAISE_MESSAGES = [
+            "Tamay, harikasın prensesim! ❤️",
+            "CaĞnım Kızım benim! 🌟",
+            "16 Yaşın Uğuruyla Geldi! 🎉",
+            "Zekana hayranım Tamay! ✨",
+            "Babası kurban olsun sana! 😍",
+            "Tamay, sen bir numarasın! 🏆",
+            "Geleceğin Yıldızı Tamay! 💫",
+            "Harika gidiyorsun bir tanem! 🌸"
+        ];
+
+        const TETROMINOS = {
+            I: { shape: [[0,0,0,0],[1,1,1,1],[0,0,0,0],[0,0,0,0]], color: COLORS.I },
+            J: { shape: [[1,0,0],[1,1,1],[0,0,0]], color: COLORS.J },
+            L: { shape: [[0,0,1],[1,1,1],[0,0,0]], color: COLORS.L },
+            O: { shape: [[1,1],[1,1]], color: COLORS.O },
+            S: { shape: [[0,1,1],[1,1,0],[0,0,0]], color: COLORS.S },
+            T: { shape: [[0,1,0],[1,1,1],[0,0,0]], color: COLORS.T },
+            Z: { shape: [[1,1,0],[0,1,1],[0,0,0]], color: COLORS.Z }
+        };
+
+        function App() {
+            const [grid, setGrid] = useState(Array(20).fill().map(() => Array(10).fill(0)));
+            const [activePiece, setActivePiece] = useState(null);
+            const [pos, setPos] = useState({ x: 3, y: 0 });
+            const [score, setScore] = useState(0);
+            const [praises, setPraises] = useState([]);
+            const [gameOver, setGameOver] = useState(false);
+
+            const spawnPiece = useCallback(() => {
+                const keys = Object.keys(TETROMINOS);
+                const type = keys[Math.floor(Math.random() * keys.length)];
+                setActivePiece(TETROMINOS[type]);
+                setPos({ x: 3, y: 0 });
+                if (checkCollision(TETROMINOS[type], { x: 3, y: 0 })) setGameOver(true);
+            }, [grid]);
+
+            const checkCollision = (piece, offset) => {
+                for (let y = 0; y < piece.shape.length; y++) {
+                    for (let x = 0; x < piece.shape[y].length; x++) {
+                        if (piece.shape[y][x]) {
+                            const newX = offset.x + x;
+                            const newY = offset.y + y;
+                            if (newX < 0 || newX >= 10 || newY >= 20 || (newY >= 0 && grid[newY][newX])) return true;
+                        }
+                    }
+                }
+                return false;
+            };
+
+            const rotate = () => {
+                const rotated = activePiece.shape[0].map((_, i) => activePiece.shape.map(row => row[i]).reverse());
+                const newPiece = { ...activePiece, shape: rotated };
+                if (!checkCollision(newPiece, pos)) setActivePiece(newPiece);
+            };
+
+            const lockPiece = () => {
+                const newGrid = [...grid.map(row => [...row])];
+                activePiece.shape.forEach((row, y) => {
+                    row.forEach((cell, x) => {
+                        if (cell) {
+                            if (pos.y + y >= 0) newGrid[pos.y + y][pos.x + x] = activePiece.color;
+                        }
+                    });
+                });
+
+                let rowsCleared = 0;
+                const filteredGrid = newGrid.filter(row => {
+                    if (row.every(c => c !== 0)) { rowsCleared++; return false; }
+                    return true;
+                });
+                
+                while (filteredGrid.length < 20) filteredGrid.unshift(Array(10).fill(0));
+                
+                if (rowsCleared > 0) {
+                    setScore(s => s + (rowsCleared * 100));
+                    const newPraise = { 
+                        id: Date.now(), 
+                        text: PRAISE_MESSAGES[Math.floor(Math.random() * PRAISE_MESSAGES.length)] 
+                    };
+                    setPraises(p => [...p, newPraise]);
+                    setTimeout(() => setPraises(p => p.filter(i => i.id !== newPraise.id)), 2500);
+                }
+
+                setGrid(filteredGrid);
+                spawnPiece();
+            };
+
+            useEffect(() => { if (!activePiece) spawnPiece(); }, [activePiece, spawnPiece]);
+
+            useEffect(() => {
+                if (gameOver) return;
+                const drop = setInterval(() => {
+                    if (!checkCollision(activePiece, { x: pos.x, y: pos.y + 1 })) {
+                        setPos(p => ({ ...p, y: p.y + 1 }));
+                    } else { lockPiece(); }
+                }, 800);
+                return () => clearInterval(drop);
+            }, [pos, activePiece, gameOver]);
+
+            useEffect(() => {
+                const handleKey = (e) => {
+                    if (gameOver) return;
+                    if (e.key === 'ArrowLeft' && !checkCollision(activePiece, { x: pos.x - 1, y: pos.y })) setPos(p => ({ ...p, x: p.x - 1 }));
+                    if (e.key === 'ArrowRight' && !checkCollision(activePiece, { x: pos.x + 1, y: pos.y })) setPos(p => ({ ...p, x: p.x + 1 }));
+                    if (e.key === 'ArrowDown' && !checkCollision(activePiece, { x: pos.x, y: pos.y + 1 })) setPos(p => ({ ...p, y: p.y + 1 }));
+                    if (e.key === 'ArrowUp') rotate();
+                };
+                window.addEventListener('keydown', handleKey);
+                return () => window.removeEventListener('keydown', handleKey);
+            }, [pos, activePiece, gameOver]);
+
             return (
-                <div className="flex flex-col items-center justify-center min-h-screen">
-                    <h1 className="text-3xl font-bold mb-4 text-cyan-400">TAMYRIS TETRIS</h1>
-                    <div className="bg-slate-800 p-4 rounded-lg shadow-2xl border-4 border-slate-700">
-                        <div className="grid grid-cols-10 gap-0">
-                            {Array.from({ length: 200 }).map((_, i) => (
-                                <div key={i} className="grid-cell bg-slate-900"></div>
-                            ))}
-                        </div>
+                <div className="flex flex-col items-center justify-center min-h-screen p-4">
+                    <div className="mb-4 text-center">
+                        <h1 className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-fuchsia-500 italic">TAMYRIS TETRIS</h1>
+                        <p className="text-fuchsia-400 font-bold">Puan: {score}</p>
                     </div>
-                    <div className="mt-6 text-slate-400 text-sm italic">
-                        MGD CleanOS Altyapısı ile Hazırlandı
+
+                    <div className="relative grid-container p-1 rounded-lg">
+                        {praises.map(p => (
+                            <div key={p.id} className="praise-anim text-2xl font-bold text-yellow-300 text-center w-full top-1/2 left-0">
+                                {p.text}
+                            </div>
+                        ))}
+                        
+                        {grid.map((row, y) => (
+                            <div key={y} className="flex">
+                                {row.map((cell, x) => {
+                                    let color = cell || 'bg-transparent';
+                                    if (activePiece) {
+                                        const py = y - pos.y;
+                                        const px = x - pos.x;
+                                        if (py >= 0 && py < activePiece.shape.length && px >= 0 && px < activePiece.shape[py].length && activePiece.shape[py][px]) {
+                                            color = activePiece.color;
+                                        }
+                                    }
+                                    return <div key={x} className={`brick ${color} ${color === 'bg-transparent' ? 'border-slate-800' : ''}`}></div>;
+                                })}
+                            </div>
+                        ))}
+
+                        {gameOver && (
+                            <div className="absolute inset-0 bg-black/90 flex flex-col items-center justify-center text-center p-6 rounded-lg z-[200]">
+                                <h2 className="text-3xl font-bold text-red-500 mb-2">Oyun Bitti!</h2>
+                                <p className="text-white mb-6">Harikaydın Tamay! 16 yaş sana hep böyle puanlar getirsin. ❤️</p>
+                                <button onClick={() => window.location.reload()} className="bg-fuchsia-600 hover:bg-fuchsia-700 text-white px-8 py-3 rounded-full font-bold transition-all transform hover:scale-110">Tekrar Dene</button>
+                            </div>
+                        )}
                     </div>
+
+                    <footer className="mt-8 text-center">
+                        <p className="text-xl font-bold text-fuchsia-300 animate-pulse">CaĞnım Kızıma :)</p>
+                        <p className="text-xs text-slate-500 mt-2">MGD Özel Yazılım | Tamay'ın 16. Yaşına Özel</p>
+                    </footer>
                 </div>
             );
         }
 
-        const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<Tetris />);
+        ReactDOM.createRoot(document.getElementById('root')).render(<App />);
     </script>
 </body>
 </html>
