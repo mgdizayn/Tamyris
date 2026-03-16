@@ -1,0 +1,16 @@
+{
+  "name": "Tamay Tetris",
+  "short_name": "TamayTetris",
+  "start_url": "/Tamay-Tetris/",
+  "display": "standalone",
+  "background_color": "#020617",
+  "theme_color": "#020617",
+  "description": "Tamay için renkli ve motivasyon dolu mobil uyumlu web Tetris oyunu.",
+  "icons": [
+    {
+      "src": "/Tamay-Tetris/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}
