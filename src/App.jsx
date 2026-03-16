@@ -1,118 +1,118 @@
-import React from 'react';
-import GameBoard from './components/GameBoard';
-import GlassButton from './components/GlassButton';
-import MobileControls from './components/MobileControls';
-import NextPiecePreview from './components/NextPiecePreview';
-import ScorePanel from './components/ScorePanel';
-import { useTetrisGame } from './hooks/useTetrisGame';
 
-export default function App() {
-  const {
-    nextPiece,
-    score,
-    lines,
-    level,
-    isRunning,
-    gameOver,
-    messageBursts,
-    combo,
-    highScore,
-    visibleBoard,
-    setIsRunning,
-    resetGame,
-    movePiece,
-    rotatePiece,
-    softDrop,
-    hardDrop,
-    startTouch,
-    endTouch,
-  } = useTetrisGame();
+import React, {useState,useEffect} from "react"
 
-  return (
-    <div className="min-h-screen w-full overflow-hidden bg-slate-950 text-white">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(34,211,238,0.16),transparent_26%),radial-gradient(circle_at_bottom,_rgba(244,114,182,0.18),transparent_28%),linear-gradient(180deg,#020617_0%,#0f172a_55%,#020617_100%)]" />
+const W=10
+const H=20
 
-      <div className="relative mx-auto flex min-h-screen w-full max-w-6xl flex-col px-3 pb-5 pt-4 sm:px-5">
-        <header className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-3xl border border-white/10 bg-white/5 px-4 py-3 backdrop-blur-xl">
-          <div>
-            <div className="text-xs uppercase tracking-[0.35em] text-cyan-200/80">Tamay Edition</div>
-            <h1 className="text-2xl font-black tracking-tight sm:text-3xl">Glow Tetris</h1>
-          </div>
+const shapes=[
+[[1,1,1,1]],
+[[1,1],[1,1]],
+[[0,1,0],[1,1,1]]
+]
 
-          <div className="flex gap-2">
-            <GlassButton onClick={() => setIsRunning((prev) => !prev)}>
-              {isRunning ? 'Duraklat' : 'Başlat'}
-            </GlassButton>
-            <GlassButton onClick={resetGame}>Yeniden Başlat</GlassButton>
-          </div>
-        </header>
+function empty(){
+return Array.from({length:H},()=>Array(W).fill(0))
+}
 
-        <main className="grid flex-1 gap-4 lg:grid-cols-[1.2fr_360px]">
-          <div>
-            <GameBoard
-              visibleBoard={visibleBoard}
-              messageBursts={messageBursts}
-              gameOver={gameOver}
-              onRestart={resetGame}
-              onTouchStart={startTouch}
-              onTouchEnd={endTouch}
-            />
+export default function App(){
 
-            <div className="mt-4 sm:hidden">
-              <MobileControls
-                moveLeft={() => movePiece(-1)}
-                moveRight={() => movePiece(1)}
-                rotate={rotatePiece}
-                softDrop={softDrop}
-                hardDrop={hardDrop}
-                togglePause={() => setIsRunning((prev) => !prev)}
-                isRunning={isRunning}
-                mobileOnly
-              />
-            </div>
-          </div>
+const [board,setBoard]=useState(empty())
+const [piece,setPiece]=useState({shape:shapes[0],x:3,y:0})
+const [score,setScore]=useState(0)
+const [msg,setMsg]=useState("")
 
-          <aside className="grid gap-4 content-start">
-            <ScorePanel
-              score={score}
-              lines={lines}
-              level={level}
-              highScore={highScore}
-              combo={combo}
-            />
+const messages=[
+"Tamay harikasın!",
+"Tamay ışık saçıyor!",
+"Devam et Tamay!",
+"Tamay bugün yıldız!"
+]
 
-            <div className="rounded-[30px] border border-white/10 bg-white/5 p-4 backdrop-blur-xl">
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-1">
-                <NextPiecePreview nextPiece={nextPiece} />
+function collide(b,p,dx,dy){
+for(let y=0;y<p.shape.length;y++){
+for(let x=0;x<p.shape[y].length;x++){
+if(p.shape[y][x]){
+let nx=p.x+x+dx
+let ny=p.y+y+dy
+if(nx<0||nx>=W||ny>=H) return true
+if(ny>=0&&b[ny][nx]) return true
+}
+}
+}
+return false
+}
 
-                <div className="rounded-3xl border border-white/10 bg-black/20 p-4 text-sm text-slate-300">
-                  <h3 className="mb-3 font-bold text-white">Kontroller</h3>
-                  <div className="space-y-2">
-                    <p>• Klavye: ← → ↑ ↓ ve Space</p>
-                    <p>• Dokunmatik: Sağa/sola kaydır, dokun dönsün, aşağı kaydır sert düşsün</p>
-                    <p>• Mobil butonlar alt bölümde</p>
-                    <p>• P tuşu ile duraklat</p>
-                  </div>
-                </div>
-              </div>
-            </div>
+function merge(b,p){
+let nb=b.map(r=>[...r])
+p.shape.forEach((row,y)=>{
+row.forEach((v,x)=>{
+if(v && p.y+y>=0) nb[p.y+y][p.x+x]=1
+})
+})
+return nb
+}
 
-            <MobileControls
-              moveLeft={() => movePiece(-1)}
-              moveRight={() => movePiece(1)}
-              rotate={rotatePiece}
-              softDrop={softDrop}
-              hardDrop={hardDrop}
-              togglePause={() => setIsRunning((prev) => !prev)}
-              isRunning={isRunning}
-            />
-          </aside>
-        </main>
+function clear(b){
+let lines=0
+let nb=b.filter(r=>{
+if(r.every(c=>c)){lines++;return false}
+return true
+})
+while(nb.length<H) nb.unshift(Array(W).fill(0))
+return {nb,lines}
+}
 
-        <footer className="mt-4 rounded-3xl border border-white/10 bg-white/5 px-4 py-3 text-center text-sm text-slate-300 backdrop-blur-xl">
-          CaĞnım Kızıma :)
-        </footer>
-      </div>
-    </div>
-  );
+function tick(){
+setPiece(p=>{
+if(!collide(board,p,0,1)) return {...p,y:p.y+1}
+let merged=merge(board,p)
+let {nb,lines}=clear(merged)
+if(lines){
+setScore(s=>s+lines*100)
+setMsg(messages[Math.floor(Math.random()*messages.length)])
+setTimeout(()=>setMsg(""),2000)
+}
+setBoard(nb)
+return {shape:shapes[Math.floor(Math.random()*shapes.length)],x:3,y:0}
+})
+}
+
+useEffect(()=>{
+let t=setInterval(tick,700)
+return ()=>clearInterval(t)
+})
+
+function move(d){
+setPiece(p=>!collide(board,p,d,0)?{...p,x:p.x+d}:p)
+}
+
+return(
+<div style={{display:"flex",flexDirection:"column",alignItems:"center",padding:20}}>
+
+<h1>Tamyris Tetris</h1>
+
+<div style={{display:"grid",gridTemplateColumns:`repeat(${W},24px)`}}>
+{board.map((row,y)=>
+row.map((c,x)=>
+<div key={y+"-"+x} style={{
+width:24,height:24,
+border:"1px solid #111",
+background:c?"#22d3ee":"#020617"
+}}/>
+)
+)}
+</div>
+
+<div style={{marginTop:20}}>
+<button onClick={()=>move(-1)}>◀</button>
+<button onClick={()=>move(1)}>▶</button>
+</div>
+
+<p>Score: {score}</p>
+<p>{msg}</p>
+
+<footer style={{marginTop:30,opacity:.7}}>CaĞnım Kızıma :)</footer>
+
+</div>
+)
 }
