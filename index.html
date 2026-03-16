@@ -1,13 +1,44 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="tr">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Tamyris Tetris</title>
-    <meta name="description" content="Tamay için hazırlanmış mobil uyumlu web tabanlı Tetris oyunu." />
-  </head>
-  <body>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tamyris Tetris | MGD</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        body { background-color: #0f172a; color: white; margin: 0; overflow: hidden; }
+        .grid-cell { width: 30px; height: 30px; border: 1px solid #1e293b; }
+    </style>
+</head>
+<body>
     <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
-  </body>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        function Tetris() {
+            return (
+                <div className="flex flex-col items-center justify-center min-h-screen">
+                    <h1 className="text-3xl font-bold mb-4 text-cyan-400">TAMYRIS TETRIS</h1>
+                    <div className="bg-slate-800 p-4 rounded-lg shadow-2xl border-4 border-slate-700">
+                        <div className="grid grid-cols-10 gap-0">
+                            {Array.from({ length: 200 }).map((_, i) => (
+                                <div key={i} className="grid-cell bg-slate-900"></div>
+                            ))}
+                        </div>
+                    </div>
+                    <div className="mt-6 text-slate-400 text-sm italic">
+                        MGD CleanOS Altyapısı ile Hazırlandı
+                    </div>
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<Tetris />);
+    </script>
+</body>
 </html>
