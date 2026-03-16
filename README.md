@@ -1,26 +1,30 @@
-# Tamay Tetris
+# Tamyris Tetris
 
-Telefon ve tablet uyumlu, web tabanlı, renkli ve motive edici Tetris oyunu.
+GitHub Pages için hazır Vite + React tabanlı mobil/tablet uyumlu Tetris oyunu.
 
-## Özellikler
-- Mobil / tablet uyumlu kontrol yapısı
-- Parlak ve renkli bloklar
-- Satır temizlenince synth tabanlı ses efekti
-- Tamay için motive edici mesaj patlamaları
-- LocalStorage ile high score saklama
-- GitHub Pages uyumlu Vite yapılandırması
+## Lokal geliştirme
 
-## Kurulum
 ```bash
 npm install
 npm run dev
 ```
 
 ## Build
+
 ```bash
 npm run build
 ```
 
-## GitHub Pages
-Repo adı `Tamay-Tetris` ise `vite.config.js` içindeki `base` değeri hazırdır.
-Repo adı farklıysa `base` alanını güncelle.
+## GitHub Pages yayınlama
+
+Bu repo içinde hazır `.github/workflows/deploy.yml` vardır.
+
+Yapman gerekenler:
+
+1. Repoyu GitHub'a `Tamyris` adıyla yükle
+2. **Settings > Pages > Source** kısmında **GitHub Actions** seç
+3. `main` branch'e push yap
+4. Action otomatik build edip yayına alır
+
+Yayın adresi:
+`https://mgdizayn.github.io/Tamyris/`
