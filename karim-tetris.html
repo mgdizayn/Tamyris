@@ -35,18 +35,29 @@ html, body {
 #header {
   flex-shrink: 0;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: 1px;
   background: linear-gradient(135deg, #5c0025 0%, #a8003e 40%, #d10055 60%, #a8003e 80%, #5c0025 100%);
   color: #ffe8f3;
-  font-size: 16px;
-  font-weight: bold;
-  letter-spacing: 3px;
-  text-shadow: 0 0 14px rgba(255,100,180,0.9), 0 1px 3px rgba(0,0,0,0.6);
   box-shadow: 0 3px 20px rgba(255,10,80,0.45);
   position: relative;
   overflow: hidden;
+}
+#header .h-main {
+  font-size: 15px;
+  font-weight: bold;
+  letter-spacing: 3px;
+  text-shadow: 0 0 14px rgba(255,100,180,0.9), 0 1px 3px rgba(0,0,0,0.6);
+  display: flex; align-items: center; gap: 6px;
+}
+#header .h-sub {
+  font-size: 10px;
+  letter-spacing: 2.5px;
+  color: #ffcce8;
+  text-shadow: 0 0 10px rgba(255,120,200,0.7);
+  font-style: italic;
 }
 
 #header::after {
@@ -264,7 +275,10 @@ html, body {
 <body>
 
 <div id="app">
-  <div id="header">💕 &nbsp;Karım da Karım&nbsp; 💕</div>
+  <div id="header">
+    <div class="h-main">💕 &nbsp;Karım da Karım&nbsp; 💕</div>
+    <div class="h-sub">✦ &nbsp;Aşkım Evrim'e&nbsp; ✦</div>
+  </div>
   <div id="score-bar">
     <span>SKOR &nbsp;<b id="el-score">0</b></span>
     <span>SEVİYE &nbsp;<b id="el-level">1</b></span>
@@ -761,12 +775,11 @@ BTN_MAP.forEach(([id,a])=>{
     clearTimeout(hT); clearInterval(hI);
   };
 
-  el.addEventListener('touchstart',onPress,{passive:false});
-  el.addEventListener('touchend',  onRelease,{passive:true});
-  el.addEventListener('touchcancel',onRelease,{passive:true});
-  el.addEventListener('mousedown', onPress);
-  el.addEventListener('mouseup',   onRelease);
-  el.addEventListener('mouseleave',onRelease);
+  el.addEventListener('pointerdown', onPress);
+  el.addEventListener('pointerup',   onRelease);
+  el.addEventListener('pointercancel',onRelease);
+  el.addEventListener('pointerleave', onRelease);
+  el.style.touchAction = 'none';
 });
 
 // Keyboard
